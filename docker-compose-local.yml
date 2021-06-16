@@ -1,0 +1,44 @@
+version: "3.7"
+services:
+  asterixdb:
+    build:
+      context: ./image
+      args:
+        - MAVEN_OPTS=${MAVEN_OPTS}
+    depends_on:
+      - datanode
+      - namenode
+    ports:
+      - "19002:19002"
+      - "19006:19006"
+    command: ["wait-for-it", "namenode:8020", "-t", "20",
+              "--", "/opt/asterixdb-entrypoint.sh"]
+
+  namenode:
+    build:
+      context: ./image
+      args:
+        - MAVEN_OPTS=${MAVEN_OPTS}
+    volumes:
+      - ./data/:/data/:ro
+    expose:
+      - "8020"
+    ports:
+      - "9870:9870"
+    command: ["hdfs", "namenode"]
+
+  datanode:
+    build:
+      context: ./image
+      args:
+        - MAVEN_OPTS=${MAVEN_OPTS}
+    depends_on:
+      - namenode
+    ports:
+      - "36000-36999:9864"
+    expose:
+      - "9866"
+      - "9867"
+      - "46759"
+    command: ["wait-for-it", "namenode:8020", "-t", "10",
+              "--", "hdfs", "datanode"]
