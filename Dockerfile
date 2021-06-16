@@ -1,5 +1,10 @@
-FROM adoptopenjdk:16-jre-hotspot-focal AS builder
+FROM maven:3.8.1-adoptopenjdk-15 AS builder
 MAINTAINER Ingo Müller <ingo.mueller@inf.ethz.ch>
+
+ARG ASTERIXDB_REV=5120106e
+ARG MAVEN_OPTS
+
+ENV HADOOP_HOME /opt/hadoop
 
 # Tools for building
 RUN apt-get update && \
@@ -8,14 +13,27 @@ RUN apt-get update && \
         wget \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Download and unpack
-RUN cd /opt/ && \
+# Download and unpack AsterixDB
+RUN cd /tmp && \
     wget --progress=dot:giga -O asterix-server.zip \
-        https://downloads.apache.org/asterixdb/asterixdb-0.9.6/asterix-server-0.9.6-binary-assembly.zip && \
+        https://github.com/apache/asterixdb/archive/$ASTERIXDB_REV.zip && \
     unzip asterix-server.zip && \
-    mv apache-asterixdb-0.9.6 asterixdb
+    cd asterixdb-*/ && \
+    mvn clean package -DskipTests && \
+    mv asterixdb/asterix-server/target/asterix-server-*-binary-assembly/apache-asterixdb-*-SNAPSHOT/ /opt/asterixdb && \
+    rm -rf /root/.m2
 
-FROM adoptopenjdk:16-jre-hotspot-focal
+# Download and unpack Hadoop
+RUN mkdir $HADOOP_HOME && \
+    cd $HADOOP_HOME && \
+    wget --progress=dot:giga https://archive.apache.org/dist/hadoop/core/hadoop-3.2.2/hadoop-3.2.2.tar.gz -O - | \
+         tar -xz --strip-components=1
+
+
+FROM adoptopenjdk:15-jre-hotspot-focal
+
+ENV HADOOP_HOME /opt/hadoop
+ENV PATH $PATH:$HADOOP_HOME/bin
 
 # Runtime depencensies
 RUN apt-get update && \
@@ -24,8 +42,12 @@ RUN apt-get update && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/asterixdb /opt/asterixdb
+COPY --from=builder $HADOOP_HOME $HADOOP_HOME
 COPY assets/entrypoint.sh /opt/entrypoint.sh
+COPY hadoop/etc $HADOOP_HOME/etc
+
+RUN hdfs namenode -format && rm -rf /opt/hadoop/logs/*
 
 EXPOSE 19002 19006
 
-ENTRYPOINT /opt/entrypoint.sh
+CMD /opt/entrypoint.sh
