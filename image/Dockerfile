@@ -38,16 +38,19 @@ ENV PATH $PATH:$HADOOP_HOME/bin
 # Runtime depencensies
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y \
+        # For AsterixDB
         procps \
+        # For docker-compose
+        wait-for-it \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /opt/asterixdb /opt/asterixdb
 COPY --from=builder $HADOOP_HOME $HADOOP_HOME
-COPY assets/entrypoint.sh /opt/entrypoint.sh
+COPY scripts/asterixdb-entrypoint.sh /opt/asterixdb-entrypoint.sh
 COPY hadoop/etc $HADOOP_HOME/etc
 
 RUN hdfs namenode -format && rm -rf /opt/hadoop/logs/*
 
 EXPOSE 19002 19006
 
-CMD /opt/entrypoint.sh
+CMD /opt/asterixdb-entrypoint.sh
