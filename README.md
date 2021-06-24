@@ -37,7 +37,7 @@ Above command uses a pre-built [docker image](https://hub.docker.com/r/ingomuell
 docker-compose --file docker-compose-local.yml up
 ```
 
-If you are behind a corporate firewall, you will have to configure Maven (which is used to build part of Presto) as follows before running above command:
+If you are behind a corporate firewall, you will have to configure Maven (which is used to build part of AsterixDB) as follows before running above command:
 
 ```bash
 export MAVEN_OPTS="-Dhttp.proxyHost=your.proxy.com -Dhttp.proxyPort=3128 -Dhttps.proxyHost=your.proxy.com -Dhttps.proxyPort=3128"
@@ -45,7 +45,7 @@ export MAVEN_OPTS="-Dhttp.proxyHost=your.proxy.com -Dhttp.proxyPort=3128 -Dhttps
 
 ### Uploading Data to HDFS
 
-The `data/` folder is mounted into the HDFS namenode container, from where you can upload it using the HDFS client in that container (`docker-presto_asterixdb_1` may have a different name on your machine; run `docker ps` to find out):
+The `data/` folder is mounted into the HDFS namenode container, from where you can upload it using the HDFS client in that container (`docker-asterixdb_namenode_1` may have a different name on your machine; run `docker ps` to find out):
 
 ```bash
 docker exec -it docker-asterixdb_namenode_1 hadoop fs -mkdir /dataset
@@ -71,10 +71,11 @@ Upload it to `/dataset/test.json` on HDFS as described above. Then run the follo
 CREATE TYPE t1 AS OPEN {};
 
 CREATE EXTERNAL DATASET Test(t1)
-USING HDFS
-  (("hdfs"="hdfs://namenode:8020"),
-   ("path"="/dataset/test.json"),
-   ("input-format"="text-input-format"),
-   ("format"="json"));
+USING hdfs (
+  ("hdfs"="hdfs://namenode:8020"),
+  ("path"="/dataset/test.json"),
+  ("input-format"="text-input-format"),
+  ("format"="json")
+);
 
 ```
