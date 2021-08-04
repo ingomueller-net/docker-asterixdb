@@ -1,7 +1,7 @@
 FROM maven:3.8.1-adoptopenjdk-15 AS builder
 MAINTAINER Ingo Müller <ingo.mueller@inf.ethz.ch>
 
-ARG ASTERIXDB_REV=5120106e
+ARG ASTERIXDB_REV=03fd6d0f
 ARG MAVEN_OPTS
 
 ENV HADOOP_HOME /opt/hadoop

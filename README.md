@@ -4,6 +4,7 @@ This projects aims to make it easy to get started with [AsterixDB](https://aster
 
 * The [sample cluster](https://asterixdb.apache.org/docs/0.9.6/ncservice.html#quickstart) (which consists of one cluster controller and two node controllers) in a single container
 * HDFS (with name node and data nodes in their own respective containers)
+* External tables on S3
 
 ### Starting AsterixDB without HDFS
 
@@ -57,7 +58,7 @@ docker exec -it docker-asterixdb_namenode_1 hadoop fs -ls /dataset
 
 Once started, you should be able to use the server by accssing http://localhost:19006. Alternatively, the [REST API](https://ci.apache.org/projects/asterixdb/api.html) is accessible on the standard port.
 
-### Creating an External Table
+### Creating an External Table on HDFS
 
 Suppose you have the following file `test.json`:
 
@@ -70,7 +71,7 @@ Upload it to `/dataset/test.json` on HDFS as described above. Then run the follo
 ```SQL
 CREATE TYPE t1 AS OPEN {};
 
-CREATE EXTERNAL DATASET Test(t1)
+CREATE EXTERNAL DATASET TestHdfs(t1)
 USING hdfs (
   ("hdfs"="hdfs://namenode:8020"),
   ("path"="/dataset/test.json"),
@@ -78,4 +79,23 @@ USING hdfs (
   ("format"="json")
 );
 
+```
+
+### Creating an External Table on S3
+
+Suppose you have stored `test.json` from above on `s3://my-bucket-name/test.json` in the `eu-west-1` region on S3. Then the following command creates an external table based on that file:
+
+```SQL
+CREATE TYPE t1 AS OPEN {};  -- omit if type exists already
+
+CREATE EXTERNAL DATASET TestS3(t1)
+USING S3 (
+  ("accessKeyId"="YOURACCESSKEYID"),
+  ("secretAccessKey"="YOURSECRETACCESSKEY"),
+  ("region"="eu-west-1"),
+  ("serviceEndpoint"="https://s3.eu-west-1.amazonaws.com:443"),
+  ("container"="my-bucket-name"),
+  ("definition"="test.json"),
+  ("format"="json")
+);
 ```
