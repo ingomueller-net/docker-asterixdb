@@ -15,10 +15,9 @@ RUN apt-get update && \
 
 # Download and unpack AsterixDB
 RUN cd /tmp && \
-    wget --progress=dot:giga -O asterix-server.zip \
-        https://github.com/apache/asterixdb/archive/$ASTERIXDB_REV.zip && \
-    unzip asterix-server.zip && \
-    cd asterixdb-*/ && \
+    wget --progress=dot:giga -O asterix-server.tar.gz \
+        "https://asterix-gerrit.ics.uci.edu/changes/asterixdb~12763/revisions/3/archive?format=tgz" && \
+    tar -xzf asterix-server.tar.gz && \
     mvn clean package -DskipTests && \
     mv asterixdb/asterix-server/target/asterix-server-*-binary-assembly/apache-asterixdb-*-SNAPSHOT/ /opt/asterixdb && \
     rm -rf /root/.m2
