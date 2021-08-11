@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   asterixdb:
-    image: ingomuellernet/asterixdb
+    image: ingomuellernet/asterixdb:git-rev-146b46
     depends_on:
       - datanode
       - namenode
@@ -12,7 +12,7 @@ services:
               "--", "/opt/asterixdb-entrypoint.sh"]
 
   namenode:
-    image: ingomuellernet/asterixdb
+    image: ingomuellernet/asterixdb:git-rev-146b46
     volumes:
       - ./data/:/data/:ro
     expose:
